@@ -24,13 +24,16 @@ def partition_contiguous(iterable, rank, size):
         MPI rank (between 0 and size - 1, inclusive)
 
     size: int 
-        Total number of MPI ranks
+        Total number of MPI ranks (at least 1)
 
     Returns
     -------
     list
-        Subset of input iterable assigned to given MPI rank, as a list 
+        Subset of input iterable assigned to given MPI rank, as a list
+
     """
+    _validate_rank_size(rank, size)
+
     iterable = list(iterable)
     length = len(iterable) // size
     remainder = len(iterable) % size
@@ -65,32 +68,20 @@ def partition_striped(iterable, rank, size):
         MPI rank (between 0 and size - 1, inclusive)
 
     size: int 
-        Total number of MPI ranks
+        Total number of MPI ranks (at least 1)
 
     Returns
     -------
     itertools.islice
         Subset of input iterable assigned to given MPI rank
     """
+    _validate_rank_size(rank, size)
     return itertools.islice(iterable, rank, None, size)
 
-if __name__ == '__main__':
-
-    print('Contiguous')
-    iterable = range(12)
-    print(list(iterable))
-    for rank in range(5):
-        print(rank, list(partition_contiguous(iterable, rank, 5)))
-    
-    print('Contiguous')
-    iterable = range(12)
-    print(list(iterable))
-    for rank in range(3):
-        print(rank, list(partition_contiguous(iterable, rank, 3)))
-
-    print('Striped')
-    iterable = range(12)
-    print(list(iterable))
-    for rank in range(5):
-        print(rank, list(partition_striped(iterable, rank, 5)))
-
+def _validate_rank_size(rank, size):
+    if rank < 0:
+        raise ValueError('rank must >= 0')
+    if size < 1:
+        raise ValueError('size must be positive')
+    if rank >= size:
+        raise ValueError('rank must be less than size')
